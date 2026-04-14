@@ -77,7 +77,7 @@ IMAGE_CMD_sunxi-sdimg () {
 	
 	# Copy device tree file
 	
-	echo "COPY DEVICE TREE" >> /home/fanning/Desktop/fuck.txt
+	# echo "COPY DEVICE TREE" >> /home/fanning/Desktop/fuck.txt
 	mcopy -i ${WORKDIR}/boot.img -s ${DEPLOY_DIR_IMAGE}/suniv-f1c100s-licheepi-nano.dtb ::suniv-f1c100s-licheepi-nano.dtb
 
 	if [ -e "${DEPLOY_DIR_IMAGE}/u-boot.bin" ]
