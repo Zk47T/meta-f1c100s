@@ -13,7 +13,13 @@ PR = "r0"
 
 SRCREV_pn-${PN} = "${AUTOREV}"
 
-SRC_URI += "git://github.com/ninhnn2/linux-5.4.77.git;protocol=https"
+FILESEXTRAPATHS_prepend := "${THISDIR}/linux-f1c100s_5.4.77:"
+SRC_URI += "git://github.com/florpor/linux.git;protocol=https;branch=licheepi-nano-v5.4.y"
+SRC_URI += "file://f1c100s_defconfig"
+
+do_configure_prepend() {
+    cp ${WORKDIR}/f1c100s_defconfig ${S}/arch/arm/configs/f1c100s_defconfig
+}
 
 S = "${WORKDIR}/git/"
 LDFLAGS = ""
