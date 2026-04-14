@@ -40,8 +40,8 @@ MACHINE ?= "f1c100s"
 
 HOSTTOOLS += "x86_64-linux-gnu-gcc"
 
-BB_NUMBER_THREADS ?= "3"
-PARALLEL_MAKE ?= "-j 3"
+# BB_NUMBER_THREADS ?= "3"
+# PARALLEL_MAKE ?= "-j 3"
 
 QT_DEV_TOOLS = " \
 qtbase-dev \
@@ -184,24 +184,25 @@ EXTRA_TOOLS_INSTALL = " \
     cmake \
 "
 
-IMAGE_INSTALL_append += " \
-    ${QT_TOOLS} \
-    ${CORE_OS} \
-    ${DEV_SDK_INSTALL} \
-    ${DEV_EXTRAS} \
-    ${EXTRA_TOOLS_INSTALL} \
-    ${KERNEL_EXTRA_INSTALL} \
-    ${WIFI_SUPPORT} \
-"
-
-IMAGE_INSTALL_append += " \
-    ${FONTS} \
-    ${QT_TOOLS} \
-    ${QT_DEV_TOOLS} \
-    qcolorcheck \
-    ${TSLIB} \
-    tspress \
-"
+# Minimal image - comment out Qt and extras for core-image-minimal
+# IMAGE_INSTALL_append += " \
+#     ${QT_TOOLS} \
+#     ${CORE_OS} \
+#     ${DEV_SDK_INSTALL} \
+#     ${DEV_EXTRAS} \
+#     ${EXTRA_TOOLS_INSTALL} \
+#     ${KERNEL_EXTRA_INSTALL} \
+#     ${WIFI_SUPPORT} \
+# "
+#
+# IMAGE_INSTALL_append += " \
+#     ${FONTS} \
+#     ${QT_TOOLS} \
+#     ${QT_DEV_TOOLS} \
+#     qcolorcheck \
+#     ${TSLIB} \
+#     tspress \
+# "
 
 #
 # Where to place downloads
@@ -214,7 +215,7 @@ IMAGE_INSTALL_append += " \
 #
 # The default is a downloads directory under TOPDIR which is the build directory.
 #
-DL_DIR ?= "/home/fanning/yocto/poky/build-v3s/downloads"
+# DL_DIR ?= "/home/fanning/yocto/poky/build-v3s/downloads"
 
 #
 # Where to place shared-state files
@@ -432,4 +433,6 @@ PACKAGECONFIG_append_pn-qemu-system-native = " sdl"
 # CONF_VERSION is increased each time build/conf/ changes incompatibly and is used to
 # track the version of this file when it was generated. This can safely be ignored if
 # this doesn't mean anything to you.
+BBMASK = "meta-f1c100s/recipes-qt"
+
 CONF_VERSION = "1"
