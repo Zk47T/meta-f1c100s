@@ -321,7 +321,7 @@ EXTRA_IMAGE_FEATURES ?= "debug-tweaks"
 #   - 'image-prelink' in order to prelink the filesystem image
 # NOTE: if listing mklibs & prelink both, then make sure mklibs is before prelink
 # NOTE: mklibs also needs to be explicitly enabled for a given image, see local.conf.extended
-USER_CLASSES ?= "buildstats image-mklibs image-prelink"
+USER_CLASSES ?= "buildstats"
 
 #
 # Runtime testing of images
@@ -435,4 +435,4 @@ PACKAGECONFIG:append:pn-qemu-system-native = " sdl"
 # this doesn't mean anything to you.
 BBMASK = "meta-f1c100s/recipes-qt"
 
-CONF_VERSION = "1"
+CONF_VERSION = "2"
