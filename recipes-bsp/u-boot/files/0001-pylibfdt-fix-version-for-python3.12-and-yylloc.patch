@@ -1,0 +1,14 @@
+--- a/scripts/dtc/pylibfdt/setup.py
++++ b/scripts/dtc/pylibfdt/setup.py
+@@ -96,6 +96,11 @@ files = os.environ.get('SOURCES', '').split()
+ cflags = os.environ.get('CPPFLAGS', '').split()
+ objdir = os.environ.get('OBJDIR')
+ version = os.environ.get('VERSION')
++# Sanitize version to comply with PEP 440 (Python 3.12+ setuptools is strict)
++if version:
++    import re as _re
++    version = _re.sub(r'^[^0-9]*', '', version)
++    version = version or '0.0.1'
+ swig_opts = os.environ.get('SWIG_OPTS', '').split()
+
+ # If we were called directly rather than through our Makefile (which is often
