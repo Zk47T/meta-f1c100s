@@ -1,0 +1,157 @@
+// SPDX-License-Identifier: (GPL-2.0+ OR X11)
+/*
+ * LicheePi Nano — Device Driver Development Board DTS
+ *
+ * Compatible với kernel fork florpor/linux licheepi-nano-v5.4.y
+ * DTSI của fork thiếu i2c0/i2c1/i2c2 — định nghĩa i2c0 inline dưới soc.
+ *
+ * Pin assignments:
+ *   PE0/PE1  — UART0 (console, 115200)
+ *   PE3      — GPIO out → ILI9341 RST  (active-low)
+ *   PE4      — GPIO in  → Button interrupt (active-low, nối GND)
+ *   PE5      — GPIO out → ILI9341 DC
+ *   PE6      — GPIO out → LED
+ *   PE7      — SPI1 CS
+ *   PE8      — SPI1 MOSI
+ *   PE9      — SPI1 CLK
+ *   PE10     — SPI1 MISO
+ *   PD0      — I2C0 SDA → SSD1306
+ *   PD12     — I2C0 SCK
+ *   PF0–PF5  — MMC0 (SD card)
+ */
+
+/dts-v1/;
+#include "suniv-f1c100s.dtsi"
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/interrupt-controller/irq.h>
+
+/ {
+	model = "Lichee Pi Nano - Device Driver Dev";
+	compatible = "licheepi,licheepi-nano", "allwinner,suniv-f1c100s";
+
+	aliases {
+		serial0 = &uart0;
+	};
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	reg_vcc3v3: vcc3v3 {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc3v3";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+	};
+
+	/* Task 1: GPIO LED blink
+	 * Driver: drivers/leds/leds-gpio.c (CONFIG_LEDS_GPIO — đã có)
+	 * Test:   echo 1 > /sys/class/leds/licheepi:green:user/brightness
+	 */
+	leds {
+		compatible = "gpio-leds";
+
+		led_user: led0 {
+			label = "licheepi:green:user";
+			gpios = <&pio 4 6 GPIO_ACTIVE_HIGH>; /* PE6 */
+			default-state = "off";
+		};
+	};
+
+	/* Task 2: Button interrupt blink
+	 * Driver: drivers/input/keyboard/gpio_keys.c (CONFIG_KEYBOARD_GPIO)
+	 * Test:   cat /dev/input/event0 | hexdump -C
+	 */
+	gpio_keys {
+		compatible = "gpio-keys";
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		button0: button@0 {
+			reg = <0>;
+			label = "User button";
+			gpios = <&pio 4 4 GPIO_ACTIVE_LOW>; /* PE4, nối GND */
+			linux,code = <KEY_ENTER>;
+			debounce-interval = <20>;
+			wakeup-source;
+		};
+	};
+
+	soc {
+		/* Task 3: I2C0 + SSD1306
+		 * Node này không có trong DTSI của fork — định nghĩa inline.
+		 * CLK_BUS_I2C0 = 34, RST_BUS_I2C0 = 21 (từ suniv-ccu-f1c100s.h)
+		 * Pins: PD0 (SDA), PD12 (SCK) — thêm pinctrl group trong &pio bên dưới
+		 */
+		i2c0: i2c@1c27000 {
+			compatible = "allwinner,suniv-f1c100s-i2c",
+				     "allwinner,sun6i-a31-i2c";
+			reg = <0x01c27000 0x400>;
+			interrupts = <7>;
+			clocks = <&ccu CLK_BUS_I2C0>;
+			resets = <&ccu RST_BUS_I2C0>;
+			pinctrl-names = "default";
+			pinctrl-0 = <&i2c0_pd_pins>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "okay";
+
+			ssd1306: oled@3c {
+				compatible = "my-driver,ssd1306";
+				reg = <0x3c>;
+			};
+		};
+	};
+};
+
+/* Thêm pinctrl groups còn thiếu trong DTSI của fork */
+&pio {
+	/* I2C0: PD0 (SDA, alt-func 3), PD12 (SCK, alt-func 3) */
+	i2c0_pd_pins: i2c0-pd-pins {
+		pins = "PD0", "PD12";
+		function = "i2c0";
+	};
+
+	/* SPI1: PE7(CS), PE8(MOSI), PE9(CLK), PE10(MISO) — alt-func 4 */
+	spi1_pe_pins: spi1-pe-pins {
+		pins = "PE7", "PE8", "PE9", "PE10";
+		function = "spi1";
+	};
+};
+
+/* UART0 — console debug */
+&uart0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart0_pe_pins>;
+	status = "okay";
+};
+
+/* MMC0 — SD card boot */
+&mmc0 {
+	vmmc-supply = <&reg_vcc3v3>;
+	bus-width = <4>;
+	broken-cd;
+	status = "okay";
+};
+
+/* Task 4: SPI1 + ILI9341
+ * Controller SPI1 @ 0x01C06000, pins PE7–PE10
+ * GPIO bổ sung: PE5 (DC), PE3 (RST active-low)
+ * Driver đọc dc-gpios / reset-gpios qua devm_gpiod_get()
+ */
+&spi1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&spi1_pe_pins>;
+	#address-cells = <1>;
+	#size-cells = <0>;
+	status = "okay";
+
+	ili9341: display@0 {
+		compatible = "my-driver,ili9341";
+		reg = <0>;
+		spi-max-frequency = <32000000>;
+		dc-gpios    = <&pio 4 5 GPIO_ACTIVE_HIGH>; /* PE5 */
+		reset-gpios = <&pio 4 3 GPIO_ACTIVE_LOW>;  /* PE3 */
+	};
+};

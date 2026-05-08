@@ -25,3 +25,5 @@ PACKAGECONFIG:append:pn-qemu-system-native = " sdl"
 BBMASK = "meta-f1c100s/recipes-qt"
 
 CONF_VERSION = "2"
+
+# DEVICE_DRIVER = "1"

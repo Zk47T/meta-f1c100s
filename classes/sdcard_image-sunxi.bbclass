@@ -14,10 +14,17 @@ inherit image_types
 #
 
 # This image depends on the rootfs image
+# Scarthgap dùng : thay vì _ cho override syntax
+IMAGE_TYPEDEP:sunxi-sdimg = "${SDIMG_ROOTFS_TYPE}"
 IMAGE_TYPEDEP_sunxi-sdimg = "${SDIMG_ROOTFS_TYPE}"
 
 # Boot partition volume id
 BOOTDD_VOLUME_ID ?= "${MACHINE}"
+
+# DTB filename trong boot partition
+# KERNEL_DEVICETREE chỉ có trong kernel recipe scope — dùng SUNXI_DTB thay thế
+# Override trong local.conf khi cần: SUNXI_DTB = "device-driver.dtb"
+SUNXI_DTB ?= "${@'device-driver.dtb' if d.getVar('DEVICE_DRIVER') == '1' else 'suniv-f1c100s-licheepi-nano.dtb'}"
 
 # Boot partition size [in KiB]
 BOOT_SPACE ?= "6144"
@@ -69,39 +76,38 @@ IMAGE_CMD:sunxi-sdimg () {
 	#echo "SUM rootfs: $(expr ${BOOT_SPACE_ALIGNED} \+ ${IMAGE_ROOTFS_ALIGNMENT}) $(expr ${BOOT_SPACE_ALIGNED} \+ ${IMAGE_ROOTFS_ALIGNMENT} \+ ${ROOTFS_SIZE})" >> /home/fanning/Desktop/fuck.txt
 
 	# Create a vfat image with boot files
-	BOOT_BLOCKS=$(LC_ALL=C parted -s ${SDIMG} unit b print | awk '/ 1 / { print substr($4, 1, length($4 -1)) / 512 /2 }')
-	rm -f ${WORKDIR}/boot.img
-	mkfs.vfat -n "${BOOTDD_VOLUME_ID}" -S 512 -C ${WORKDIR}/boot.img $BOOT_BLOCKS
+	# Dùng IMGDEPLOYDIR (đã nằm trong PSEUDO_IGNORE_PATHS với prefix "deploy-")
+	# để pseudo không intercept mkfs.vfat tạo/format file → tránh "Disk full" giả
+	BOOT_BLOCKS=${BOOT_SPACE_ALIGNED}
+	BOOT_IMG="${IMGDEPLOYDIR}/boot-temp.img"
+	rm -f ${BOOT_IMG}
+	mkfs.vfat -n "${BOOTDD_VOLUME_ID}" -S 512 -C ${BOOT_IMG} ${BOOT_BLOCKS}
 
-	mcopy -i ${WORKDIR}/boot.img -s ${DEPLOY_DIR_IMAGE}/${KERNEL_IMAGETYPE}-${MACHINE}.bin ::${KERNEL_IMAGETYPE}
-	
-	# Copy device tree file
-	
-	# echo "COPY DEVICE TREE" >> /home/fanning/Desktop/fuck.txt
-	mcopy -i ${WORKDIR}/boot.img -s ${DEPLOY_DIR_IMAGE}/suniv-f1c100s-licheepi-nano.dtb ::suniv-f1c100s-licheepi-nano.dtb
+	mcopy -i ${BOOT_IMG} -s ${DEPLOY_DIR_IMAGE}/${KERNEL_IMAGETYPE}-${MACHINE}.bin ::${KERNEL_IMAGETYPE}
+
+	# Copy device tree file — dùng SUNXI_DTB (in-scope với image recipe)
+	mcopy -i ${BOOT_IMG} -s ${DEPLOY_DIR_IMAGE}/${SUNXI_DTB} ::suniv-f1c100s-licheepi-nano.dtb
 
 	if [ -e "${DEPLOY_DIR_IMAGE}/u-boot.bin" ]
 	then
-		mcopy -i ${WORKDIR}/boot.img -s ${DEPLOY_DIR_IMAGE}/u-boot.bin ::u-boot.bin
+		mcopy -i ${BOOT_IMG} -s ${DEPLOY_DIR_IMAGE}/u-boot.bin ::u-boot.bin
 	fi
-	
+
 	if [ -e "${DEPLOY_DIR_IMAGE}/boot.scr" ]
 	then
-		mcopy -i ${WORKDIR}/boot.img -s ${DEPLOY_DIR_IMAGE}/boot.scr ::
-		#echo "Co file boot.scr" >> /home/fanning/Desktop/fuck.txt
+		mcopy -i ${BOOT_IMG} -s ${DEPLOY_DIR_IMAGE}/boot.scr ::
 	else
-		#echo "Please run command: bitbake v3s-u-boot-scr"
-		#echo "Deo Co file boot.scr" >> /home/fanning/Desktop/fuck.txt
 		bbfatal "Please run command: bitbake v3s-u-boot-scr"
 	fi
 
 	# Add stamp file
 	touch ${WORKDIR}/image-version-info
 	echo "${IMAGE_NAME}" > ${WORKDIR}/image-version-info
-	mcopy -i ${WORKDIR}/boot.img -v ${WORKDIR}/image-version-info ::
+	mcopy -i ${BOOT_IMG} -v ${WORKDIR}/image-version-info ::
 
 	# Burn Partitions
-	dd if=${WORKDIR}/boot.img of=${SDIMG} conv=notrunc seek=1 bs=$(expr ${IMAGE_ROOTFS_ALIGNMENT} \* 1024)
+	dd if=${BOOT_IMG} of=${SDIMG} conv=notrunc seek=1 bs=$(expr ${IMAGE_ROOTFS_ALIGNMENT} \* 1024)
+	rm -f ${BOOT_IMG}
 	# If SDIMG_ROOTFS_TYPE is a .xz file use xzcat
 	if echo "${SDIMG_ROOTFS_TYPE}" | egrep -q "*\.xz"
 	then
@@ -113,7 +119,7 @@ IMAGE_CMD:sunxi-sdimg () {
 	# write u-boot-spl at the begining of sdcard in one shot
 	SPL_FILE=$(basename ${SPL_BINARY})
 	dd if=${DEPLOY_DIR_IMAGE}/${SPL_FILE} of=${SDIMG} bs=1024 seek=8 conv=notrunc
-	ln -sr ${IMGDEPLOYDIR}/${IMAGE_NAME}.rootfs.sunxi-sdimg.img ${IMGDEPLOYDIR}/sdimg
+	ln -snrf ${IMGDEPLOYDIR}/${IMAGE_NAME}.rootfs.sunxi-sdimg.img ${IMGDEPLOYDIR}/sdimg
 }
 
 # write uboot.itb for arm64 boards
