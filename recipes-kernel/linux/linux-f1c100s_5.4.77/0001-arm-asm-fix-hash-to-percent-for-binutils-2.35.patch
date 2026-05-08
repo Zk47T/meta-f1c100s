@@ -1,0 +1,1177 @@
+diff --git a/arch/arm/boot/bootp/init.S b/arch/arm/boot/bootp/init.S
+index 5c476bd2b4ce..263481c3062d 100644
+--- a/arch/arm/boot/bootp/init.S
++++ b/arch/arm/boot/bootp/init.S
+@@ -13,8 +13,8 @@
+  *  size immediately following the kernel, we could build this into
+  *  a binary blob, and concatenate the zImage using the cat command.
+  */
+-		.section .start,#alloc,#execinstr
+-		.type	_start, #function
++		.section .start, "ax"
++		.type _start, %function
+ 		.globl	_start
+ 
+ _start:		add	lr, pc, #-0x8		@ lr = current load addr
+@@ -72,7 +72,7 @@ move:		ldmia	r4!, {r7 - r10}		@ move 32-bytes at a time
+ 
+ 		.align
+ 
+-		.type	data,#object
++		.type data, %object
+ data:		.word	initrd_start		@ source initrd address
+ 		.word	initrd_phys		@ destination initrd address
+ 		.word	initrd_size		@ initrd size
+diff --git a/arch/arm/boot/bootp/initrd.S b/arch/arm/boot/bootp/initrd.S
+index dd3d04971c42..1b8fae246f6d 100644
+--- a/arch/arm/boot/bootp/initrd.S
++++ b/arch/arm/boot/bootp/initrd.S
+@@ -1,5 +1,5 @@
+ /* SPDX-License-Identifier: GPL-2.0 */
+-	.type	initrd_start,#object
++	.type initrd_start, %object
+ 	.globl	initrd_start
+ initrd_start:
+ 	.incbin	INITRD
+diff --git a/arch/arm/boot/compressed/big-endian.S b/arch/arm/boot/compressed/big-endian.S
+index 88e2a88d324b..0e092c36da2f 100644
+--- a/arch/arm/boot/compressed/big-endian.S
++++ b/arch/arm/boot/compressed/big-endian.S
+@@ -6,7 +6,7 @@
+  *  Author: Nicolas Pitre
+  */
+ 
+-	.section ".start", #alloc, #execinstr
++	.section ".start", "ax"
+ 
+ 	mrc	p15, 0, r0, c1, c0, 0	@ read control reg
+ 	orr	r0, r0, #(1 << 7)	@ enable big endian mode
+diff --git a/arch/arm/boot/compressed/head.S b/arch/arm/boot/compressed/head.S
+index 93dffed0ac6e..44f90cdbf092 100644
+--- a/arch/arm/boot/compressed/head.S
++++ b/arch/arm/boot/compressed/head.S
+@@ -140,7 +140,7 @@
+ #endif
+ 		.endm
+ 
+-		.section ".start", #alloc, #execinstr
++		.section ".start", "ax"
+ /*
+  * sort out different calling conventions
+  */
+@@ -152,7 +152,7 @@
+ 		 */
+  AR_CLASS(	.arm	)
+ start:
+-		.type	start,#function
++		.type start, %function
+ 		/*
+ 		 * These 7 nops along with the 1 nop immediately below for
+ 		 * !THUMB2 form 8 nops that make the compressed kernel bootable
+@@ -636,7 +636,7 @@ not_relocated:	mov	r0, #0
+ #endif
+ 
+ 		.align	2
+-		.type	LC0, #object
++		.type LC0, %object
+ LC0:		.word	LC0			@ r1
+ 		.word	__bss_start		@ r2
+ 		.word	_end			@ r3
+@@ -943,7 +943,7 @@ call_cache_fn:	adr	r12, proc_types
+  * defined.
+  */
+ 		.align	2
+-		.type	proc_types,#object
++		.type proc_types, %object
+ proc_types:
+ 		.word	0x41000000		@ old ARM ID
+ 		.word	0xff00f000
+@@ -1327,7 +1327,7 @@ __armv3_mpu_cache_flush:
+  */
+ #ifdef DEBUG
+ 		.align	2
+-		.type	phexbuf,#object
++		.type phexbuf, %object
+ phexbuf:	.space	12
+ 		.size	phexbuf, . - phexbuf
+ 
+diff --git a/arch/arm/boot/compressed/piggy.S b/arch/arm/boot/compressed/piggy.S
+index 0284f84dcf38..27577644ee72 100644
+--- a/arch/arm/boot/compressed/piggy.S
++++ b/arch/arm/boot/compressed/piggy.S
+@@ -1,5 +1,5 @@
+ /* SPDX-License-Identifier: GPL-2.0 */
+-	.section .piggydata,#alloc
++	.section .piggydata, "a"
+ 	.globl	input_data
+ input_data:
+ 	.incbin	"arch/arm/boot/compressed/piggy_data"
+diff --git a/arch/arm/common/mcpm_head.S b/arch/arm/common/mcpm_head.S
+index 291d969bc719..94c6febd11b2 100644
+--- a/arch/arm/common/mcpm_head.S
++++ b/arch/arm/common/mcpm_head.S
+@@ -211,19 +211,19 @@ ENDPROC(mcpm_entry_point)
+ 	.bss
+ 
+ 	.align	CACHE_WRITEBACK_ORDER
+-	.type	first_man_locks, #object
++	.type first_man_locks, %object
+ first_man_locks:
+ 	.space	VLOCK_SIZE * MAX_NR_CLUSTERS
+ 	.align	CACHE_WRITEBACK_ORDER
+ 
+-	.type	mcpm_entry_vectors, #object
++	.type mcpm_entry_vectors, %object
+ ENTRY(mcpm_entry_vectors)
+ 	.space	4 * MAX_NR_CLUSTERS * MAX_CPUS_PER_CLUSTER
+ 
+-	.type	mcpm_entry_early_pokes, #object
++	.type mcpm_entry_early_pokes, %object
+ ENTRY(mcpm_entry_early_pokes)
+ 	.space	8 * MAX_NR_CLUSTERS * MAX_CPUS_PER_CLUSTER
+ 
+-	.type	mcpm_power_up_setup_phys, #object
++	.type mcpm_power_up_setup_phys, %object
+ ENTRY(mcpm_power_up_setup_phys)
+ 	.space  4		@ set by mcpm_sync_init()
+diff --git a/arch/arm/kernel/entry-common.S b/arch/arm/kernel/entry-common.S
+index 271cb8a1eba1..693361e739da 100644
+--- a/arch/arm/kernel/entry-common.S
++++ b/arch/arm/kernel/entry-common.S
+@@ -308,7 +308,7 @@ __sys_trace_return:
+ 
+ 	.align	5
+ #ifdef CONFIG_ALIGNMENT_TRAP
+-	.type	__cr_alignment, #object
++	.type __cr_alignment, %object
+ __cr_alignment:
+ 	.word	cr_alignment
+ #endif
+@@ -316,7 +316,7 @@ __cr_alignment:
+ 
+ 	.macro	syscall_table_start, sym
+ 	.equ	__sys_nr, 0
+-	.type	\sym, #object
++	.type \sym, %object
+ ENTRY(\sym)
+ 	.endm
+ 
+diff --git a/arch/arm/kernel/sigreturn_codes.S b/arch/arm/kernel/sigreturn_codes.S
+index 7540ec51d16c..ea6ec35376f1 100644
+--- a/arch/arm/kernel/sigreturn_codes.S
++++ b/arch/arm/kernel/sigreturn_codes.S
+@@ -69,7 +69,7 @@ ARM_OK(	.arm	)
+ 
+ 	.section .rodata
+ 	.global sigreturn_codes
+-	.type	sigreturn_codes, #object
++	.type sigreturn_codes, %object
+ 
+ 	.align
+ 
+diff --git a/arch/arm/kernel/sleep.S b/arch/arm/kernel/sleep.S
+index 5dc8b80bb693..e823a2577288 100644
+--- a/arch/arm/kernel/sleep.S
++++ b/arch/arm/kernel/sleep.S
+@@ -185,6 +185,6 @@ mpidr_hash_ptr:
+ 
+ 	.data
+ 	.align	2
+-	.type	sleep_save_sp, #object
++	.type sleep_save_sp, %object
+ ENTRY(sleep_save_sp)
+ 	.space	SLEEP_SAVE_SP_SZ		@ struct sleep_save_sp
+diff --git a/arch/arm/mm/proc-arm1020.S b/arch/arm/mm/proc-arm1020.S
+index 4fa5371bc662..1b331411b599 100644
+--- a/arch/arm/mm/proc-arm1020.S
++++ b/arch/arm/mm/proc-arm1020.S
+@@ -427,7 +427,7 @@ ENTRY(cpu_arm1020_set_pte_ext)
+ #endif /* CONFIG_MMU */
+ 	ret	lr
+ 
+-	.type	__arm1020_setup, #function
++	.type __arm1020_setup, %function
+ __arm1020_setup:
+ 	mov	r0, #0
+ 	mcr	p15, 0, r0, c7, c7		@ invalidate I,D caches on v4
+@@ -452,7 +452,7 @@ __arm1020_setup:
+ 	 * .RVI ZFRS BLDP WCAM
+ 	 * .011 1001 ..11 0101
+ 	 */
+-	.type	arm1020_crval, #object
++	.type arm1020_crval, %object
+ arm1020_crval:
+ 	crval	clear=0x0000593f, mmuset=0x00003935, ucset=0x00001930
+ 
+@@ -466,7 +466,7 @@ arm1020_crval:
+ 	string	cpu_arch_name, "armv5t"
+ 	string	cpu_elf_name, "v5"
+ 
+-	.type	cpu_arm1020_name, #object
++	.type cpu_arm1020_name, %object
+ cpu_arm1020_name:
+ 	.ascii	"ARM1020"
+ #ifndef CONFIG_CPU_ICACHE_DISABLE
+@@ -491,9 +491,9 @@ cpu_arm1020_name:
+ 
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
++	.section ".proc.info.init", "a"
+ 
+-	.type	__arm1020_proc_info,#object
++	.type __arm1020_proc_info, %object
+ __arm1020_proc_info:
+ 	.long	0x4104a200			@ ARM 1020T (Architecture v5T)
+ 	.long	0xff0ffff0
+diff --git a/arch/arm/mm/proc-arm1020e.S b/arch/arm/mm/proc-arm1020e.S
+index 5d8a8339e09a..21ba8f6873d6 100644
+--- a/arch/arm/mm/proc-arm1020e.S
++++ b/arch/arm/mm/proc-arm1020e.S
+@@ -409,7 +409,7 @@ ENTRY(cpu_arm1020e_set_pte_ext)
+ #endif /* CONFIG_MMU */
+ 	ret	lr
+ 
+-	.type	__arm1020e_setup, #function
++	.type __arm1020e_setup, %function
+ __arm1020e_setup:
+ 	mov	r0, #0
+ 	mcr	p15, 0, r0, c7, c7		@ invalidate I,D caches on v4
+@@ -433,7 +433,7 @@ __arm1020e_setup:
+ 	 * .RVI ZFRS BLDP WCAM
+ 	 * .011 1001 ..11 0101
+ 	 */
+-	.type	arm1020e_crval, #object
++	.type arm1020e_crval, %object
+ arm1020e_crval:
+ 	crval	clear=0x00007f3f, mmuset=0x00003935, ucset=0x00001930
+ 
+@@ -449,9 +449,9 @@ arm1020e_crval:
+ 
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
++	.section ".proc.info.init", "a"
+ 
+-	.type	__arm1020e_proc_info,#object
++	.type __arm1020e_proc_info, %object
+ __arm1020e_proc_info:
+ 	.long	0x4105a200			@ ARM 1020TE (Architecture v5TE)
+ 	.long	0xff0ffff0
+diff --git a/arch/arm/mm/proc-arm1022.S b/arch/arm/mm/proc-arm1022.S
+index b3dd95c345e4..c726b814b249 100644
+--- a/arch/arm/mm/proc-arm1022.S
++++ b/arch/arm/mm/proc-arm1022.S
+@@ -402,7 +402,7 @@ ENTRY(cpu_arm1022_set_pte_ext)
+ #endif /* CONFIG_MMU */
+ 	ret	lr
+ 
+-	.type	__arm1022_setup, #function
++	.type __arm1022_setup, %function
+ __arm1022_setup:
+ 	mov	r0, #0
+ 	mcr	p15, 0, r0, c7, c7		@ invalidate I,D caches on v4
+@@ -427,7 +427,7 @@ __arm1022_setup:
+ 	 * .011 1001 ..11 0101
+ 	 * 
+ 	 */
+-	.type	arm1022_crval, #object
++	.type arm1022_crval, %object
+ arm1022_crval:
+ 	crval	clear=0x00007f3f, mmuset=0x00003935, ucset=0x00001930
+ 
+@@ -443,9 +443,9 @@ arm1022_crval:
+ 
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
++	.section ".proc.info.init", "a"
+ 
+-	.type	__arm1022_proc_info,#object
++	.type __arm1022_proc_info, %object
+ __arm1022_proc_info:
+ 	.long	0x4105a220			@ ARM 1022E (v5TE)
+ 	.long	0xff0ffff0
+diff --git a/arch/arm/mm/proc-arm1026.S b/arch/arm/mm/proc-arm1026.S
+index ac5afde12f35..c34618cf03c6 100644
+--- a/arch/arm/mm/proc-arm1026.S
++++ b/arch/arm/mm/proc-arm1026.S
+@@ -391,7 +391,7 @@ ENTRY(cpu_arm1026_set_pte_ext)
+ #endif /* CONFIG_MMU */
+ 	ret	lr
+ 
+-	.type	__arm1026_setup, #function
++	.type __arm1026_setup, %function
+ __arm1026_setup:
+ 	mov	r0, #0
+ 	mcr	p15, 0, r0, c7, c7		@ invalidate I,D caches on v4
+@@ -421,7 +421,7 @@ __arm1026_setup:
+ 	 * .011 1001 ..11 0101
+ 	 * 
+ 	 */
+-	.type	arm1026_crval, #object
++	.type arm1026_crval, %object
+ arm1026_crval:
+ 	crval	clear=0x00007f3f, mmuset=0x00003935, ucset=0x00001934
+ 
+@@ -437,9 +437,9 @@ arm1026_crval:
+ 	string	cpu_arm1026_name, "ARM1026EJ-S"
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
++	.section ".proc.info.init", "a"
+ 
+-	.type	__arm1026_proc_info,#object
++	.type __arm1026_proc_info, %object
+ __arm1026_proc_info:
+ 	.long	0x4106a260			@ ARM 1026EJ-S (v5TEJ)
+ 	.long	0xff0ffff0
+diff --git a/arch/arm/mm/proc-arm720.S b/arch/arm/mm/proc-arm720.S
+index c99d24363f32..6e46a00fb616 100644
+--- a/arch/arm/mm/proc-arm720.S
++++ b/arch/arm/mm/proc-arm720.S
+@@ -102,7 +102,7 @@ ENTRY(cpu_arm720_reset)
+ ENDPROC(cpu_arm720_reset)
+ 		.popsection
+ 
+-	.type	__arm710_setup, #function
++	.type __arm710_setup, %function
+ __arm710_setup:
+ 	mov	r0, #0
+ 	mcr	p15, 0, r0, c7, c7, 0		@ invalidate caches
+@@ -123,14 +123,14 @@ __arm710_setup:
+ 	 * .... 0001 ..11 1101
+ 	 * 
+ 	 */
+-	.type	arm710_cr1_clear, #object
+-	.type	arm710_cr1_set, #object
++	.type arm710_cr1_clear, %object
++	.type arm710_cr1_set, %object
+ arm710_cr1_clear:
+ 	.word	0x0f3f
+ arm710_cr1_set:
+ 	.word	0x013d
+ 
+-	.type	__arm720_setup, #function
++	.type __arm720_setup, %function
+ __arm720_setup:
+ 	mov	r0, #0
+ 	mcr	p15, 0, r0, c7, c7, 0		@ invalidate caches
+@@ -151,7 +151,7 @@ __arm720_setup:
+ 	 * ..1. 1001 ..11 1101
+ 	 * 
+ 	 */
+-	.type	arm720_crval, #object
++	.type arm720_crval, %object
+ arm720_crval:
+ 	crval	clear=0x00002f3f, mmuset=0x0000213d, ucset=0x00000130
+ 
+@@ -172,10 +172,10 @@ arm720_crval:
+  * See <asm/procinfo.h> for a definition of this structure.
+  */
+ 	
+-		.section ".proc.info.init", #alloc
++		.section ".proc.info.init", "a"
+ 
+ .macro arm720_proc_info name:req, cpu_val:req, cpu_mask:req, cpu_name:req, cpu_flush:req
+-		.type	__\name\()_proc_info,#object
++		.type __\name\()_proc_info, %object
+ __\name\()_proc_info:
+ 		.long	\cpu_val
+ 		.long	\cpu_mask
+diff --git a/arch/arm/mm/proc-arm740.S b/arch/arm/mm/proc-arm740.S
+index 1b4a3838393f..b4a6935bfa59 100644
+--- a/arch/arm/mm/proc-arm740.S
++++ b/arch/arm/mm/proc-arm740.S
+@@ -56,7 +56,7 @@ ENTRY(cpu_arm740_reset)
+ ENDPROC(cpu_arm740_reset)
+ 	.popsection
+ 
+-	.type	__arm740_setup, #function
++	.type __arm740_setup, %function
+ __arm740_setup:
+ 	mov	r0, #0
+ 	mcr	p15, 0, r0, c7, c0, 0		@ invalidate caches
+@@ -128,8 +128,8 @@ __arm740_setup:
+ 
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
+-	.type	__arm740_proc_info,#object
++	.section ".proc.info.init", "a"
++	.type __arm740_proc_info, %object
+ __arm740_proc_info:
+ 	.long	0x41807400
+ 	.long	0xfffffff0
+diff --git a/arch/arm/mm/proc-arm7tdmi.S b/arch/arm/mm/proc-arm7tdmi.S
+index 17a4687065c7..e4cadde3de32 100644
+--- a/arch/arm/mm/proc-arm7tdmi.S
++++ b/arch/arm/mm/proc-arm7tdmi.S
+@@ -47,7 +47,7 @@ ENTRY(cpu_arm7tdmi_reset)
+ ENDPROC(cpu_arm7tdmi_reset)
+ 		.popsection
+ 
+-		.type	__arm7tdmi_setup, #function
++		.type __arm7tdmi_setup, %function
+ __arm7tdmi_setup:
+ 		ret	lr
+ 		.size	__arm7tdmi_setup, . - __arm7tdmi_setup
+@@ -72,11 +72,11 @@ __arm7tdmi_setup:
+ 
+ 		.align
+ 
+-		.section ".proc.info.init", #alloc
++		.section ".proc.info.init", "a"
+ 
+ .macro arm7tdmi_proc_info name:req, cpu_val:req, cpu_mask:req, cpu_name:req, \
+ 	extra_hwcaps=0
+-		.type	__\name\()_proc_info, #object
++		.type __\name\()_proc_info, %object
+ __\name\()_proc_info:
+ 		.long	\cpu_val
+ 		.long	\cpu_mask
+diff --git a/arch/arm/mm/proc-arm920.S b/arch/arm/mm/proc-arm920.S
+index 298c76b47749..ccc2ad69eefa 100644
+--- a/arch/arm/mm/proc-arm920.S
++++ b/arch/arm/mm/proc-arm920.S
+@@ -396,7 +396,7 @@ ENTRY(cpu_arm920_do_resume)
+ ENDPROC(cpu_arm920_do_resume)
+ #endif
+ 
+-	.type	__arm920_setup, #function
++	.type __arm920_setup, %function
+ __arm920_setup:
+ 	mov	r0, #0
+ 	mcr	p15, 0, r0, c7, c7		@ invalidate I,D caches on v4
+@@ -418,7 +418,7 @@ __arm920_setup:
+ 	 * ..11 0001 ..11 0101
+ 	 * 
+ 	 */
+-	.type	arm920_crval, #object
++	.type arm920_crval, %object
+ arm920_crval:
+ 	crval	clear=0x00003f3f, mmuset=0x00003135, ucset=0x00001130
+ 
+@@ -434,9 +434,9 @@ arm920_crval:
+ 
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
++	.section ".proc.info.init", "a"
+ 
+-	.type	__arm920_proc_info,#object
++	.type __arm920_proc_info, %object
+ __arm920_proc_info:
+ 	.long	0x41009200
+ 	.long	0xff00fff0
+diff --git a/arch/arm/mm/proc-arm922.S b/arch/arm/mm/proc-arm922.S
+index 824be3a0bc23..5ca40daae22d 100644
+--- a/arch/arm/mm/proc-arm922.S
++++ b/arch/arm/mm/proc-arm922.S
+@@ -374,7 +374,7 @@ ENTRY(cpu_arm922_set_pte_ext)
+ #endif /* CONFIG_MMU */
+ 	ret	lr
+ 
+-	.type	__arm922_setup, #function
++	.type __arm922_setup, %function
+ __arm922_setup:
+ 	mov	r0, #0
+ 	mcr	p15, 0, r0, c7, c7		@ invalidate I,D caches on v4
+@@ -396,7 +396,7 @@ __arm922_setup:
+ 	 * ..11 0001 ..11 0101
+ 	 * 
+ 	 */
+-	.type	arm922_crval, #object
++	.type arm922_crval, %object
+ arm922_crval:
+ 	crval	clear=0x00003f3f, mmuset=0x00003135, ucset=0x00001130
+ 
+@@ -412,9 +412,9 @@ arm922_crval:
+ 
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
++	.section ".proc.info.init", "a"
+ 
+-	.type	__arm922_proc_info,#object
++	.type __arm922_proc_info, %object
+ __arm922_proc_info:
+ 	.long	0x41009220
+ 	.long	0xff00fff0
+diff --git a/arch/arm/mm/proc-arm925.S b/arch/arm/mm/proc-arm925.S
+index d40cff8f102c..e9b3bbe083a1 100644
+--- a/arch/arm/mm/proc-arm925.S
++++ b/arch/arm/mm/proc-arm925.S
+@@ -424,7 +424,7 @@ ENTRY(cpu_arm925_set_pte_ext)
+ #endif /* CONFIG_MMU */
+ 	ret	lr
+ 
+-	.type	__arm925_setup, #function
++	.type __arm925_setup, %function
+ __arm925_setup:
+ 	mov	r0, #0
+ 
+@@ -461,7 +461,7 @@ __arm925_setup:
+ 	 * .011 0001 ..11 1101
+ 	 * 
+ 	 */
+-	.type	arm925_crval, #object
++	.type arm925_crval, %object
+ arm925_crval:
+ 	crval	clear=0x00007f3f, mmuset=0x0000313d, ucset=0x00001130
+ 
+@@ -477,10 +477,10 @@ arm925_crval:
+ 
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
++	.section ".proc.info.init", "a"
+ 
+ .macro arm925_proc_info name:req, cpu_val:req, cpu_mask:req, cpu_name:req, cache
+-	.type	__\name\()_proc_info,#object
++	.type __\name\()_proc_info, %object
+ __\name\()_proc_info:
+ 	.long	\cpu_val
+ 	.long	\cpu_mask
+diff --git a/arch/arm/mm/proc-arm926.S b/arch/arm/mm/proc-arm926.S
+index f3cd08f353f0..f4fce404773c 100644
+--- a/arch/arm/mm/proc-arm926.S
++++ b/arch/arm/mm/proc-arm926.S
+@@ -411,7 +411,7 @@ ENTRY(cpu_arm926_do_resume)
+ ENDPROC(cpu_arm926_do_resume)
+ #endif
+ 
+-	.type	__arm926_setup, #function
++	.type __arm926_setup, %function
+ __arm926_setup:
+ 	mov	r0, #0
+ 	mcr	p15, 0, r0, c7, c7		@ invalidate I,D caches on v4
+@@ -443,7 +443,7 @@ __arm926_setup:
+ 	 * .011 0001 ..11 0101
+ 	 * 
+ 	 */
+-	.type	arm926_crval, #object
++	.type arm926_crval, %object
+ arm926_crval:
+ 	crval	clear=0x00007f3f, mmuset=0x00003135, ucset=0x00001134
+ 
+@@ -460,9 +460,9 @@ arm926_crval:
+ 
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
++	.section ".proc.info.init", "a"
+ 
+-	.type	__arm926_proc_info,#object
++	.type __arm926_proc_info, %object
+ __arm926_proc_info:
+ 	.long	0x41069260			@ ARM926EJ-S (v5TEJ)
+ 	.long	0xff0ffff0
+diff --git a/arch/arm/mm/proc-arm940.S b/arch/arm/mm/proc-arm940.S
+index 1c26d991386d..08f54ee0cb62 100644
+--- a/arch/arm/mm/proc-arm940.S
++++ b/arch/arm/mm/proc-arm940.S
+@@ -269,7 +269,7 @@ ENDPROC(arm940_dma_unmap_area)
+ 	@ define struct cpu_cache_fns (see <asm/cacheflush.h> and proc-macros.S)
+ 	define_cache_functions arm940
+ 
+-	.type	__arm940_setup, #function
++	.type __arm940_setup, %function
+ __arm940_setup:
+ 	mov	r0, #0
+ 	mcr	p15, 0, r0, c7, c5, 0		@ invalidate I cache
+@@ -340,9 +340,9 @@ __arm940_setup:
+ 
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
++	.section ".proc.info.init", "a"
+ 
+-	.type	__arm940_proc_info,#object
++	.type __arm940_proc_info, %object
+ __arm940_proc_info:
+ 	.long	0x41009400
+ 	.long	0xff00fff0
+diff --git a/arch/arm/mm/proc-arm946.S b/arch/arm/mm/proc-arm946.S
+index 2dc1c75a4fd4..b5cc0eee1446 100644
+--- a/arch/arm/mm/proc-arm946.S
++++ b/arch/arm/mm/proc-arm946.S
+@@ -322,7 +322,7 @@ ENTRY(cpu_arm946_dcache_clean_area)
+ 	mcr	p15, 0, r0, c7, c10, 4		@ drain WB
+ 	ret	lr
+ 
+-	.type	__arm946_setup, #function
++	.type __arm946_setup, %function
+ __arm946_setup:
+ 	mov	r0, #0
+ 	mcr	p15, 0, r0, c7, c5, 0		@ invalidate I cache
+@@ -395,8 +395,8 @@ __arm946_setup:
+ 
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
+-	.type	__arm946_proc_info,#object
++	.section ".proc.info.init", "a"
++	.type __arm946_proc_info, %object
+ __arm946_proc_info:
+ 	.long	0x41009460
+ 	.long	0xff00fff0
+diff --git a/arch/arm/mm/proc-arm9tdmi.S b/arch/arm/mm/proc-arm9tdmi.S
+index 913c06e590af..fced59c293c3 100644
+--- a/arch/arm/mm/proc-arm9tdmi.S
++++ b/arch/arm/mm/proc-arm9tdmi.S
+@@ -47,7 +47,7 @@ ENTRY(cpu_arm9tdmi_reset)
+ ENDPROC(cpu_arm9tdmi_reset)
+ 		.popsection
+ 
+-		.type	__arm9tdmi_setup, #function
++		.type __arm9tdmi_setup, %function
+ __arm9tdmi_setup:
+ 		ret	lr
+ 		.size	__arm9tdmi_setup, . - __arm9tdmi_setup
+@@ -66,10 +66,10 @@ __arm9tdmi_setup:
+ 
+ 		.align
+ 
+-		.section ".proc.info.init", #alloc
++		.section ".proc.info.init", "a"
+ 
+ .macro arm9tdmi_proc_info name:req, cpu_val:req, cpu_mask:req, cpu_name:req
+-		.type	__\name\()_proc_info, #object
++		.type __\name\()_proc_info, %object
+ __\name\()_proc_info:
+ 		.long	\cpu_val
+ 		.long	\cpu_mask
+diff --git a/arch/arm/mm/proc-fa526.S b/arch/arm/mm/proc-fa526.S
+index 8120b6f4dbb8..be63de23d50f 100644
+--- a/arch/arm/mm/proc-fa526.S
++++ b/arch/arm/mm/proc-fa526.S
+@@ -130,7 +130,7 @@ ENTRY(cpu_fa526_set_pte_ext)
+ #endif
+ 	ret	lr
+ 
+-	.type	__fa526_setup, #function
++	.type __fa526_setup, %function
+ __fa526_setup:
+ 	/* On return of this routine, r0 must carry correct flags for CFG register */
+ 	mov	r0, #0
+@@ -165,8 +165,8 @@ __fa526_setup:
+ 	 * ..11 1001 .111 1101
+ 	 *
+ 	 */
+-	.type	fa526_cr1_clear, #object
+-	.type	fa526_cr1_set, #object
++	.type fa526_cr1_clear, %object
++	.type fa526_cr1_set, %object
+ fa526_cr1_clear:
+ 	.word	0x3f3f
+ fa526_cr1_set:
+@@ -185,9 +185,9 @@ fa526_cr1_set:
+ 
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
++	.section ".proc.info.init", "a"
+ 
+-	.type	__fa526_proc_info,#object
++	.type __fa526_proc_info, %object
+ __fa526_proc_info:
+ 	.long	0x66015261
+ 	.long	0xff01fff1
+diff --git a/arch/arm/mm/proc-feroceon.S b/arch/arm/mm/proc-feroceon.S
+index bb6dc34d42a3..9cffacf5fc12 100644
+--- a/arch/arm/mm/proc-feroceon.S
++++ b/arch/arm/mm/proc-feroceon.S
+@@ -527,7 +527,7 @@ ENTRY(cpu_feroceon_do_resume)
+ ENDPROC(cpu_feroceon_do_resume)
+ #endif
+ 
+-	.type	__feroceon_setup, #function
++	.type __feroceon_setup, %function
+ __feroceon_setup:
+ 	mov	r0, #0
+ 	mcr	p15, 0, r0, c7, c7		@ invalidate I,D caches on v4
+@@ -551,7 +551,7 @@ __feroceon_setup:
+ 	 * .011 .001 ..11 0101
+ 	 *
+ 	 */
+-	.type	feroceon_crval, #object
++	.type feroceon_crval, %object
+ feroceon_crval:
+ 	crval	clear=0x0000773f, mmuset=0x00003135, ucset=0x00001134
+ 
+@@ -571,10 +571,10 @@ feroceon_crval:
+ 
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
++	.section ".proc.info.init", "a"
+ 
+ .macro feroceon_proc_info name:req, cpu_val:req, cpu_mask:req, cpu_name:req, cache:req
+-	.type	__\name\()_proc_info,#object
++	.type __\name\()_proc_info, %object
+ __\name\()_proc_info:
+ 	.long	\cpu_val
+ 	.long	\cpu_mask
+diff --git a/arch/arm/mm/proc-macros.S b/arch/arm/mm/proc-macros.S
+index 5461d589a1e2..1f3abd4b5805 100644
+--- a/arch/arm/mm/proc-macros.S
++++ b/arch/arm/mm/proc-macros.S
+@@ -281,7 +281,7 @@
+ #if defined(CONFIG_BIG_LITTLE) && defined(CONFIG_HARDEN_BRANCH_PREDICTOR)
+ 	.section ".rodata"
+ #endif
+-	.type	\name\()_processor_functions, #object
++	.type \name\()_processor_functions, %object
+ 	.align 2
+ ENTRY(\name\()_processor_functions)
+ 	.word	\dabort
+@@ -323,7 +323,7 @@ ENTRY(\name\()_processor_functions)
+ 
+ .macro define_cache_functions name:req
+ 	.align 2
+-	.type	\name\()_cache_fns, #object
++	.type \name\()_cache_fns, %object
+ ENTRY(\name\()_cache_fns)
+ 	.long	\name\()_flush_icache_all
+ 	.long	\name\()_flush_kern_cache_all
+@@ -340,7 +340,7 @@ ENTRY(\name\()_cache_fns)
+ .endm
+ 
+ .macro define_tlb_functions name:req, flags_up:req, flags_smp
+-	.type	\name\()_tlb_fns, #object
++	.type \name\()_tlb_fns, %object
+ ENTRY(\name\()_tlb_fns)
+ 	.long	\name\()_flush_user_tlb_range
+ 	.long	\name\()_flush_kern_tlb_range
+diff --git a/arch/arm/mm/proc-mohawk.S b/arch/arm/mm/proc-mohawk.S
+index f08308578885..78f377c74a02 100644
+--- a/arch/arm/mm/proc-mohawk.S
++++ b/arch/arm/mm/proc-mohawk.S
+@@ -372,7 +372,7 @@ ENTRY(cpu_mohawk_do_resume)
+ ENDPROC(cpu_mohawk_do_resume)
+ #endif
+ 
+-	.type	__mohawk_setup, #function
++	.type __mohawk_setup, %function
+ __mohawk_setup:
+ 	mov	r0, #0
+ 	mcr	p15, 0, r0, c7, c7		@ invalidate I,D caches
+@@ -399,7 +399,7 @@ __mohawk_setup:
+ 	 * .011 1001 ..00 0101
+ 	 *
+ 	 */
+-	.type	mohawk_crval, #object
++	.type mohawk_crval, %object
+ mohawk_crval:
+ 	crval	clear=0x00007f3f, mmuset=0x00003905, ucset=0x00001134
+ 
+@@ -416,9 +416,9 @@ mohawk_crval:
+ 
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
++	.section ".proc.info.init", "a"
+ 
+-	.type	__88sv331x_proc_info,#object
++	.type __88sv331x_proc_info, %object
+ __88sv331x_proc_info:
+ 	.long	0x56158000			@ Marvell 88SV331x (MOHAWK)
+ 	.long	0xfffff000
+diff --git a/arch/arm/mm/proc-sa110.S b/arch/arm/mm/proc-sa110.S
+index d5bc5d702563..8da6e5dbd0eb 100644
+--- a/arch/arm/mm/proc-sa110.S
++++ b/arch/arm/mm/proc-sa110.S
+@@ -156,7 +156,7 @@ ENTRY(cpu_sa110_set_pte_ext)
+ #endif
+ 	ret	lr
+ 
+-	.type	__sa110_setup, #function
++	.type __sa110_setup, %function
+ __sa110_setup:
+ 	mov	r10, #0
+ 	mcr	p15, 0, r10, c7, c7		@ invalidate I,D caches on v4
+@@ -179,7 +179,7 @@ __sa110_setup:
+ 	 * ..01 0001 ..11 1101
+ 	 * 
+ 	 */
+-	.type	sa110_crval, #object
++	.type sa110_crval, %object
+ sa110_crval:
+ 	crval	clear=0x00003f3f, mmuset=0x0000113d, ucset=0x00001130
+ 
+@@ -196,9 +196,9 @@ sa110_crval:
+ 
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
++	.section ".proc.info.init", "a"
+ 
+-	.type	__sa110_proc_info,#object
++	.type __sa110_proc_info, %object
+ __sa110_proc_info:
+ 	.long	0x4401a100
+ 	.long	0xfffffff0
+diff --git a/arch/arm/mm/proc-sa1100.S b/arch/arm/mm/proc-sa1100.S
+index be7b611c76c7..219f706128d9 100644
+--- a/arch/arm/mm/proc-sa1100.S
++++ b/arch/arm/mm/proc-sa1100.S
+@@ -195,7 +195,7 @@ ENTRY(cpu_sa1100_do_resume)
+ ENDPROC(cpu_sa1100_do_resume)
+ #endif
+ 
+-	.type	__sa1100_setup, #function
++	.type __sa1100_setup, %function
+ __sa1100_setup:
+ 	mov	r0, #0
+ 	mcr	p15, 0, r0, c7, c7		@ invalidate I,D caches on v4
+@@ -217,7 +217,7 @@ __sa1100_setup:
+ 	 * ..11 0001 ..11 1101
+ 	 * 
+ 	 */
+-	.type	sa1100_crval, #object
++	.type sa1100_crval, %object
+ sa1100_crval:
+ 	crval	clear=0x00003f3f, mmuset=0x0000313d, ucset=0x00001130
+ 
+@@ -239,10 +239,10 @@ sa1100_crval:
+ 
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
++	.section ".proc.info.init", "a"
+ 
+ .macro sa1100_proc_info name:req, cpu_val:req, cpu_mask:req, cpu_name:req
+-	.type	__\name\()_proc_info,#object
++	.type __\name\()_proc_info, %object
+ __\name\()_proc_info:
+ 	.long	\cpu_val
+ 	.long	\cpu_mask
+diff --git a/arch/arm/mm/proc-v6.S b/arch/arm/mm/proc-v6.S
+index c1c85eb3484f..8f4be8f6aee5 100644
+--- a/arch/arm/mm/proc-v6.S
++++ b/arch/arm/mm/proc-v6.S
+@@ -246,7 +246,7 @@ __v6_setup:
+ 	 * rrrr rrrx xxx0 0101 xxxx xxxx x111 xxxx < forced
+ 	 *         0 110       0011 1.00 .111 1101 < we want
+ 	 */
+-	.type	v6_crval, #object
++	.type v6_crval, %object
+ v6_crval:
+ 	crval	clear=0x01e0fb7f, mmuset=0x00c0387d, ucset=0x00c0187c
+ 
+@@ -261,12 +261,12 @@ v6_crval:
+ 	string	cpu_elf_name, "v6"
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
++	.section ".proc.info.init", "a"
+ 
+ 	/*
+ 	 * Match any ARMv6 processor core.
+ 	 */
+-	.type	__v6_proc_info, #object
++	.type __v6_proc_info, %object
+ __v6_proc_info:
+ 	.long	0x0007b000
+ 	.long	0x0007f000
+diff --git a/arch/arm/mm/proc-v7-2level.S b/arch/arm/mm/proc-v7-2level.S
+index 5db029c8f987..e32ed44b56c6 100644
+--- a/arch/arm/mm/proc-v7-2level.S
++++ b/arch/arm/mm/proc-v7-2level.S
+@@ -157,6 +157,6 @@ ENDPROC(cpu_v7_set_pte_ext)
+ 	 *   01    0 110       0011 1100 .111 1101 < we want
+ 	 */
+ 	.align	2
+-	.type	v7_crval, #object
++	.type v7_crval, %object
+ v7_crval:
+ 	crval	clear=0x2120c302, mmuset=0x10c03c7d, ucset=0x00c01c7c
+diff --git a/arch/arm/mm/proc-v7-3level.S b/arch/arm/mm/proc-v7-3level.S
+index 131984462d0d..6a515f948ee2 100644
+--- a/arch/arm/mm/proc-v7-3level.S
++++ b/arch/arm/mm/proc-v7-3level.S
+@@ -143,6 +143,6 @@ ENDPROC(cpu_v7_set_pte_ext)
+ 	 *   11    0 110    0  0011 1100 .111 1101 < we want
+ 	 */
+ 	.align	2
+-	.type	v7_crval, #object
++	.type v7_crval, %object
+ v7_crval:
+ 	crval	clear=0x0122c302, mmuset=0x30c03c7d, ucset=0x00c01c7c
+diff --git a/arch/arm/mm/proc-v7.S b/arch/arm/mm/proc-v7.S
+index c4e8006a1a8c..7574ceca5ae0 100644
+--- a/arch/arm/mm/proc-v7.S
++++ b/arch/arm/mm/proc-v7.S
+@@ -644,7 +644,7 @@ __v7_setup_stack:
+ 	string	cpu_elf_name, "v7"
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
++	.section ".proc.info.init", "a"
+ 
+ 	/*
+ 	 * Standard v7 proc info content
+@@ -672,7 +672,7 @@ __v7_setup_stack:
+ 	/*
+ 	 * ARM Ltd. Cortex A5 processor.
+ 	 */
+-	.type   __v7_ca5mp_proc_info, #object
++	.type __v7_ca5mp_proc_info, %object
+ __v7_ca5mp_proc_info:
+ 	.long	0x410fc050
+ 	.long	0xff0ffff0
+@@ -682,7 +682,7 @@ __v7_ca5mp_proc_info:
+ 	/*
+ 	 * ARM Ltd. Cortex A9 processor.
+ 	 */
+-	.type   __v7_ca9mp_proc_info, #object
++	.type __v7_ca9mp_proc_info, %object
+ __v7_ca9mp_proc_info:
+ 	.long	0x410fc090
+ 	.long	0xff0ffff0
+@@ -692,7 +692,7 @@ __v7_ca9mp_proc_info:
+ 	/*
+ 	 * ARM Ltd. Cortex A8 processor.
+ 	 */
+-	.type	__v7_ca8_proc_info, #object
++	.type __v7_ca8_proc_info, %object
+ __v7_ca8_proc_info:
+ 	.long	0x410fc080
+ 	.long	0xff0ffff0
+@@ -705,7 +705,7 @@ __v7_ca8_proc_info:
+ 	 * Marvell PJ4B processor.
+ 	 */
+ #ifdef CONFIG_CPU_PJ4B
+-	.type   __v7_pj4b_proc_info, #object
++	.type __v7_pj4b_proc_info, %object
+ __v7_pj4b_proc_info:
+ 	.long	0x560f5800
+ 	.long	0xff0fff00
+@@ -716,7 +716,7 @@ __v7_pj4b_proc_info:
+ 	/*
+ 	 * ARM Ltd. Cortex R7 processor.
+ 	 */
+-	.type	__v7_cr7mp_proc_info, #object
++	.type __v7_cr7mp_proc_info, %object
+ __v7_cr7mp_proc_info:
+ 	.long	0x410fc170
+ 	.long	0xff0ffff0
+@@ -726,7 +726,7 @@ __v7_cr7mp_proc_info:
+ 	/*
+ 	 * ARM Ltd. Cortex R8 processor.
+ 	 */
+-	.type	__v7_cr8mp_proc_info, #object
++	.type __v7_cr8mp_proc_info, %object
+ __v7_cr8mp_proc_info:
+ 	.long	0x410fc180
+ 	.long	0xff0ffff0
+@@ -736,7 +736,7 @@ __v7_cr8mp_proc_info:
+ 	/*
+ 	 * ARM Ltd. Cortex A7 processor.
+ 	 */
+-	.type	__v7_ca7mp_proc_info, #object
++	.type __v7_ca7mp_proc_info, %object
+ __v7_ca7mp_proc_info:
+ 	.long	0x410fc070
+ 	.long	0xff0ffff0
+@@ -746,7 +746,7 @@ __v7_ca7mp_proc_info:
+ 	/*
+ 	 * ARM Ltd. Cortex A12 processor.
+ 	 */
+-	.type	__v7_ca12mp_proc_info, #object
++	.type __v7_ca12mp_proc_info, %object
+ __v7_ca12mp_proc_info:
+ 	.long	0x410fc0d0
+ 	.long	0xff0ffff0
+@@ -756,7 +756,7 @@ __v7_ca12mp_proc_info:
+ 	/*
+ 	 * ARM Ltd. Cortex A15 processor.
+ 	 */
+-	.type	__v7_ca15mp_proc_info, #object
++	.type __v7_ca15mp_proc_info, %object
+ __v7_ca15mp_proc_info:
+ 	.long	0x410fc0f0
+ 	.long	0xff0ffff0
+@@ -766,7 +766,7 @@ __v7_ca15mp_proc_info:
+ 	/*
+ 	 * Broadcom Corporation Brahma-B15 processor.
+ 	 */
+-	.type	__v7_b15mp_proc_info, #object
++	.type __v7_b15mp_proc_info, %object
+ __v7_b15mp_proc_info:
+ 	.long	0x420f00f0
+ 	.long	0xff0ffff0
+@@ -776,7 +776,7 @@ __v7_b15mp_proc_info:
+ 	/*
+ 	 * ARM Ltd. Cortex A17 processor.
+ 	 */
+-	.type	__v7_ca17mp_proc_info, #object
++	.type __v7_ca17mp_proc_info, %object
+ __v7_ca17mp_proc_info:
+ 	.long	0x410fc0e0
+ 	.long	0xff0ffff0
+@@ -784,7 +784,7 @@ __v7_ca17mp_proc_info:
+ 	.size	__v7_ca17mp_proc_info, . - __v7_ca17mp_proc_info
+ 
+ 	/* ARM Ltd. Cortex A73 processor */
+-	.type	__v7_ca73_proc_info, #object
++	.type __v7_ca73_proc_info, %object
+ __v7_ca73_proc_info:
+ 	.long	0x410fd090
+ 	.long	0xff0ffff0
+@@ -792,7 +792,7 @@ __v7_ca73_proc_info:
+ 	.size	__v7_ca73_proc_info, . - __v7_ca73_proc_info
+ 
+ 	/* ARM Ltd. Cortex A75 processor */
+-	.type	__v7_ca75_proc_info, #object
++	.type __v7_ca75_proc_info, %object
+ __v7_ca75_proc_info:
+ 	.long	0x410fd0a0
+ 	.long	0xff0ffff0
+@@ -802,7 +802,7 @@ __v7_ca75_proc_info:
+ 	/*
+ 	 * Qualcomm Inc. Krait processors.
+ 	 */
+-	.type	__krait_proc_info, #object
++	.type __krait_proc_info, %object
+ __krait_proc_info:
+ 	.long	0x510f0400		@ Required ID value
+ 	.long	0xff0ffc00		@ Mask for ID
+@@ -818,7 +818,7 @@ __krait_proc_info:
+ 	/*
+ 	 * Match any ARMv7 processor core.
+ 	 */
+-	.type	__v7_proc_info, #object
++	.type __v7_proc_info, %object
+ __v7_proc_info:
+ 	.long	0x000f0000		@ Required ID value
+ 	.long	0x000f0000		@ Mask for ID
+diff --git a/arch/arm/mm/proc-v7m.S b/arch/arm/mm/proc-v7m.S
+index 1a49d503eafc..f42b2e00a0f3 100644
+--- a/arch/arm/mm/proc-v7m.S
++++ b/arch/arm/mm/proc-v7m.S
+@@ -93,7 +93,7 @@ ENTRY(cpu_cm7_proc_fin)
+ 	ret	lr
+ ENDPROC(cpu_cm7_proc_fin)
+ 
+-	.section ".init.text", #alloc, #execinstr
++	.section ".init.text", "ax"
+ 
+ __v7m_cm7_setup:
+ 	mov	r8, #(V7M_SCB_CCR_DC | V7M_SCB_CCR_IC| V7M_SCB_CCR_BP)
+@@ -177,7 +177,7 @@ ENDPROC(__v7m_setup)
+ 	string cpu_elf_name "v7m"
+ 	string cpu_v7m_name "ARMv7-M"
+ 
+-	.section ".proc.info.init", #alloc
++	.section ".proc.info.init", "a"
+ 
+ .macro __v7m_proc name, initfunc, cache_fns = nop_cache_fns, hwcaps = 0,  proc_fns = v7m_processor_functions
+ 	.long	0			/* proc_info_list.__cpu_mm_mmu_flags */
+@@ -196,7 +196,7 @@ ENDPROC(__v7m_setup)
+ 	/*
+ 	 * Match ARM Cortex-M7 processor.
+ 	 */
+-	.type	__v7m_cm7_proc_info, #object
++	.type __v7m_cm7_proc_info, %object
+ __v7m_cm7_proc_info:
+ 	.long	0x410fc270		/* ARM Cortex-M7 0xC27 */
+ 	.long	0xff0ffff0		/* Mask off revision, patch release */
+@@ -206,7 +206,7 @@ __v7m_cm7_proc_info:
+ 	/*
+ 	 * Match ARM Cortex-M4 processor.
+ 	 */
+-	.type	__v7m_cm4_proc_info, #object
++	.type __v7m_cm4_proc_info, %object
+ __v7m_cm4_proc_info:
+ 	.long	0x410fc240		/* ARM Cortex-M4 0xC24 */
+ 	.long	0xff0ffff0		/* Mask off revision, patch release */
+@@ -216,7 +216,7 @@ __v7m_cm4_proc_info:
+ 	/*
+ 	 * Match ARM Cortex-M3 processor.
+ 	 */
+-	.type	__v7m_cm3_proc_info, #object
++	.type __v7m_cm3_proc_info, %object
+ __v7m_cm3_proc_info:
+ 	.long	0x410fc230		/* ARM Cortex-M3 0xC23 */
+ 	.long	0xff0ffff0		/* Mask off revision, patch release */
+@@ -226,7 +226,7 @@ __v7m_cm3_proc_info:
+ 	/*
+ 	 * Match any ARMv7-M processor core.
+ 	 */
+-	.type	__v7m_proc_info, #object
++	.type __v7m_proc_info, %object
+ __v7m_proc_info:
+ 	.long	0x000f0000		@ Required ID value
+ 	.long	0x000f0000		@ Mask for ID
+diff --git a/arch/arm/mm/proc-xsc3.S b/arch/arm/mm/proc-xsc3.S
+index 1ac0fbbe9f12..dcf70ac88be3 100644
+--- a/arch/arm/mm/proc-xsc3.S
++++ b/arch/arm/mm/proc-xsc3.S
+@@ -443,7 +443,7 @@ ENTRY(cpu_xsc3_do_resume)
+ ENDPROC(cpu_xsc3_do_resume)
+ #endif
+ 
+-	.type	__xsc3_setup, #function
++	.type __xsc3_setup, %function
+ __xsc3_setup:
+ 	mov	r0, #PSR_F_BIT|PSR_I_BIT|SVC_MODE
+ 	msr	cpsr_c, r0
+@@ -479,7 +479,7 @@ __xsc3_setup:
+ 
+ 	.size	__xsc3_setup, . - __xsc3_setup
+ 
+-	.type	xsc3_crval, #object
++	.type xsc3_crval, %object
+ xsc3_crval:
+ 	crval	clear=0x04002202, mmuset=0x00003905, ucset=0x00001900
+ 
+@@ -496,10 +496,10 @@ xsc3_crval:
+ 
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
++	.section ".proc.info.init", "a"
+ 
+ .macro xsc3_proc_info name:req, cpu_val:req, cpu_mask:req
+-	.type	__\name\()_proc_info,#object
++	.type __\name\()_proc_info, %object
+ __\name\()_proc_info:
+ 	.long	\cpu_val
+ 	.long	\cpu_mask
+diff --git a/arch/arm/mm/proc-xscale.S b/arch/arm/mm/proc-xscale.S
+index bdb2b7749b03..066ab2c0e31d 100644
+--- a/arch/arm/mm/proc-xscale.S
++++ b/arch/arm/mm/proc-xscale.S
+@@ -556,7 +556,7 @@ ENTRY(cpu_xscale_do_resume)
+ ENDPROC(cpu_xscale_do_resume)
+ #endif
+ 
+-	.type	__xscale_setup, #function
++	.type __xscale_setup, %function
+ __xscale_setup:
+ 	mcr	p15, 0, ip, c7, c7, 0		@ invalidate I, D caches & BTB
+ 	mcr	p15, 0, ip, c7, c10, 4		@ Drain Write (& Fill) Buffer
+@@ -579,7 +579,7 @@ __xscale_setup:
+ 	 * ..11 1.01 .... .101
+ 	 * 
+ 	 */
+-	.type	xscale_crval, #object
++	.type xscale_crval, %object
+ xscale_crval:
+ 	crval	clear=0x00003b07, mmuset=0x00003905, ucset=0x00001900
+ 
+@@ -610,10 +610,10 @@ xscale_crval:
+ 
+ 	.align
+ 
+-	.section ".proc.info.init", #alloc
++	.section ".proc.info.init", "a"
+ 
+ .macro xscale_proc_info name:req, cpu_val:req, cpu_mask:req, cpu_name:req, cache
+-	.type	__\name\()_proc_info,#object
++	.type __\name\()_proc_info, %object
+ __\name\()_proc_info:
+ 	.long	\cpu_val
+ 	.long	\cpu_mask
