@@ -15,7 +15,7 @@ PR = "r0"
 SRCREV:pn-${PN} = "${AUTOREV}"
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/linux-f1c100s_5.4.77:"
-SRC_URI += "git://github.com/florpor/linux.git;protocol=https;branch=licheepi-nano-v5.4.y"
+SRC_URI += "git://github.com/Zk47T/linux.git;protocol=https;branch=licheepi-nano-v5.4.y"
 SRC_URI += "file://f1c100s_defconfig"
 SRC_URI += "file://device-driver.defconfig"
 SRC_URI += "file://dts/device-driver.dts"
