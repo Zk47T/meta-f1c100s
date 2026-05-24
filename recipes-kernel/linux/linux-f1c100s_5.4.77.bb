@@ -19,7 +19,7 @@ SRC_URI += "git://github.com/Zk47T/linux.git;protocol=https;branch=licheepi-nano
 SRC_URI += "file://f1c100s_defconfig"
 SRC_URI += "file://device-driver.defconfig"
 SRC_URI += "file://dts/device-driver.dts"
-SRC_URI += "file://0001-arm-asm-fix-hash-to-percent-for-binutils-2.35.patch"
+# patch merged into licheepi-nano-v5.4.y branch — no longer needed
 
 do_configure:prepend() {
     if [ "${DEVICE_DRIVER}" = "1" ]; then

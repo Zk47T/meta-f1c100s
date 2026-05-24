@@ -26,4 +26,21 @@ BBMASK = "meta-f1c100s/recipes-qt"
 
 CONF_VERSION = "2"
 
+# Uncomment for device driver development (uses device-driver.dts + defconfig)
 # DEVICE_DRIVER = "1"
+
+# 200 MB free space for opkg install on board
+IMAGE_ROOTFS_EXTRA_SPACE = "204800"
+
+IMAGE_INSTALL:append = " \
+    libgpiod libgpiod-tools \
+    i2c-tools \
+    evtest \
+    spidev-test \
+    kmod \
+    devmem2 \
+    strace \
+    opkg \
+    packagegroup-core-buildessential \
+    ssd1306 \
+"

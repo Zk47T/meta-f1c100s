@@ -42,6 +42,7 @@ do_image_sunxi_sdimg[depends] += " \
 			parted-native:do_populate_sysroot \
 			mtools-native:do_populate_sysroot \
 			dosfstools-native:do_populate_sysroot \
+			bmaptool-native:do_populate_sysroot \
 			virtual/kernel:do_deploy \
 			virtual/bootloader:do_deploy \
 			"
@@ -119,7 +120,12 @@ IMAGE_CMD:sunxi-sdimg () {
 	# write u-boot-spl at the begining of sdcard in one shot
 	SPL_FILE=$(basename ${SPL_BINARY})
 	dd if=${DEPLOY_DIR_IMAGE}/${SPL_FILE} of=${SDIMG} bs=1024 seek=8 conv=notrunc
+
+	# generate bmap for fast flashing with bmaptool
+	bmaptool create ${SDIMG} > ${SDIMG}.bmap
+
 	ln -snrf ${IMGDEPLOYDIR}/${IMAGE_NAME}.rootfs.sunxi-sdimg.img ${IMGDEPLOYDIR}/sdimg
+	ln -snrf ${IMGDEPLOYDIR}/${IMAGE_NAME}.rootfs.sunxi-sdimg.img.bmap ${IMGDEPLOYDIR}/sdimg.bmap
 }
 
 # write uboot.itb for arm64 boards
